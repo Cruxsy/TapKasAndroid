@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2347e8">
+<title>TapKas</title>
+<style>
+:root{--bg:#eef1f6;--card:#fff;--tx:#141a2a;--mu:#5d6679;--pr:#2347e8;--prt:#fff;--bd:#dde2ec;--ok:#0b7a43;--okb:#e5f5ec;--bad:#b3261e;--badb:#fdeceb;--wr:#8a5a00;--wrb:#fff3d6}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1120;--card:#161c30;--tx:#eef1fa;--mu:#9aa4bd;--pr:#7d93ff;--prt:#0b1026;--bd:#283050;--ok:#5fd699;--okb:#10281d;--bad:#ff8f87;--badb:#2e1514;--wr:#f3c15a;--wrb:#2c2310}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--tx);line-height:1.45;padding:env(safe-area-inset-top,0) 0 calc(76px + env(safe-area-inset-bottom,0))}
+header{padding:18px 18px 6px;max-width:560px;margin:0 auto}
+header h1{font-size:22px;margin:0;letter-spacing:-.01em}
+header p{margin:2px 0 0;color:var(--mu);font-size:14px}
+main{max-width:560px;margin:0 auto;padding:8px 14px}
+section{display:none}
+section.on{display:block}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin:10px 0}
+h2{font-size:17px;margin:0 0 8px}
+.mu{color:var(--mu);font-size:14px}
+button,select,input{font:inherit;color:inherit}
+input,select{width:100%;padding:11px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--bg)}
+button{cursor:pointer;border:0;border-radius:10px;padding:11px 14px;background:var(--pr);color:var(--prt);font-weight:600}
+button.sec{background:transparent;color:var(--pr);border:1px solid var(--bd)}
+button.del{background:transparent;color:var(--bad);border:1px solid var(--bd)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--pr);outline-offset:2px}
+.row{display:flex;gap:8px;align-items:center;margin-top:10px}
+.row>*{flex:1}
+.row>button{flex:0 0 auto}
+.tapbtn{display:block;width:170px;height:170px;border-radius:50%;margin:12px auto;font-size:18px;position:relative;box-shadow:0 0 0 10px color-mix(in srgb,var(--pr) 14%,transparent)}
+.tapbtn.live{animation:pulse 1.6s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--pr) 45%,transparent)}100%{box-shadow:0 0 0 34px transparent}}
+@media(prefers-reduced-motion:reduce){.tapbtn.live{animation:none}}
+.tag{display:inline-block;padding:2px 9px;border-radius:99px;font-size:13px;font-weight:600}
+.ok{background:var(--okb);color:var(--ok)}
+.bad{background:var(--badb);color:var(--bad)}
+.wr{background:var(--wrb);color:var(--wr)}
+.big{font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mem{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--bd)}
+.mem:first-of-type{border-top:0}
+.mem b{display:block}
+.code{font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--mu)}
+.acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.acts button{padding:7px 10px;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px 4px;border-top:1px solid var(--bd)}
+th{color:var(--mu);font-weight:600;border-top:0}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--bd);display:flex;padding-bottom:env(safe-area-inset-bottom,0)}
+nav button{flex:1;background:transparent;color:var(--mu);border-radius:0;padding:14px 4px;font-size:14px}
+nav button.on{color:var(--pr);box-shadow:inset 0 3px 0 var(--pr)}
+#toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0));transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;max-width:90%;display:none;z-index:9}
+label{font-size:14px;color:var(--mu);display:block;margin-top:10px}
+</style>
+</head>
+<body>
+<header><h1 id="orgname">TapKas</h1><p id="sub"></p></header>
+<main>
+<section id="s-tap"></section>
+<section id="s-mem"></section>
+<section id="s-rek"></section>
+<section id="s-set"></section>
+</main>
+<nav>
+<button data-tab="tap" class="on">Tap iuran</button>
+<button data-tab="mem">Anggota</button>
+<button data-tab="rek">Rekap</button>
+<button data-tab="set">Atur</button>
+</nav>
+<div id="toast" role="status"></div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KEY='tapkas_v1';
+let S={org:'Kas Organisasi',nominal:10000,due:10,members:[],pays:[],log:[]};
+try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const per=(d=new Date())=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+const rp=n=>'Rp'+Number(n).toLocaleString('id-ID');
+const fmt=t=>new Date(t).toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+const bulan=p=>{const [y,m]=p.split('-');return new Date(y,m-1,1).toLocaleDateString('id-ID',{month:'long',year:'numeric'})};
+const paid=(m,p=per())=>S.pays.find(x=>x.mid===m.id&&x.period===p);
+function months(from){const [y,m]=from.split('-').map(Number),n=new Date();return (n.getFullYear()-y)*12+(n.getMonth()+1-m)+1}
+function score(m){
+  let n=months(m.joined);
+  if(!paid(m)&&new Date().getDate()<=S.due)n-=1;
+  n=Math.max(1,n);
+  const ok=S.pays.filter(x=>x.mid===m.id&&x.ok).length;
+  return Math.min(100,Math.round(ok/n*100));
+}
+let tm;
+function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(tm);tm=setTimeout(()=>e.style.display='none',3200)}
+const uid=()=>{let c;do{c='KAS-'+Math.random().toString(36).slice(2,6).toUpperCase()}while(S.members.some(m=>m.code===c));return c};
+
+/* NFC */
+const hasNFC=!!(window.AndroidNFC) || ('NDEFReader' in window);
+let ctrl=null,scanning=false,cur=null;
+async function startScan(){
+  if(window.AndroidNFC){scanning=true;window.AndroidNFC.startScan();render();toast('Tempelkan tag NFC ke belakang HP...');return}
+  if(!hasNFC){toast('NFC tidak tersedia. Pakai pilih manual.');return}
+  try{
+    const r=new NDEFReader();ctrl=new AbortController();
+    await r.scan({signal:ctrl.signal});
+    scanning=true;
+    r.onreading=e=>{
+      let code='';
+      for(const rec of e.message.records){if(rec.recordType==='text'){code=new TextDecoder(rec.encoding||'utf-8').decode(rec.data);break}}
+      handleCode(code.trim());
+    };
+    r.onreadingerror=()=>toast('Tag tidak terbaca. Coba tap lagi.');
+    render();
+  }catch(err){scanning=false;toast('NFC gagal: '+err.message);render()}
+}
+function stopScan(){if(window.AndroidNFC)window.AndroidNFC.stopScan();if(ctrl)ctrl.abort();scanning=false;render()}
+function nativeNfcRead(code){scanning=false;handleCode(String(code||'').trim());render()}
+function nativeNfcError(message){scanning=false;toast(String(message||'NFC gagal'));render()}
+async function writeTag(code){
+  if(window.AndroidNFC){window.AndroidNFC.writeTag(code);return}
+  if(!hasNFC){toast('Menulis tag butuh perangkat NFC yang kompatibel.');return}
+  if(scanning)stopScan();
+  toast('Tempelkan tag ke belakang HP...');
+  try{
+    await new NDEFReader().write({records:[{recordType:'text',data:code}]},{signal:AbortSignal.timeout(15000)});
+    toast('Kode '+code+' tertulis ke tag.');
+  }catch(err){toast('Gagal menulis: '+err.message)}
+}
+function handleCode(code){
+  const m=S.members.find(x=>x.code===code);
+  S.log.unshift({ts:Date.now(),code,name:m?m.name:null});S.log=S.log.slice(0,50);save();
+  if(!m){toast('Kode tidak terdaftar: '+code);render();return}
+  cur=m.id;render();
+}
+
+/* Render */
+function render(){
+  $('#orgname').textContent=S.org;
+  $('#sub').textContent='Periode '+bulan(per())+', iuran '+rp(S.nominal)+', jatuh tempo tanggal '+S.due;
+  rTap();rMem();rRek();rSet();
+}
+function rTap(){
+  const m=S.members.find(x=>x.id===cur),p=m&&paid(m);
+  let h='<div class="card" style="text-align:center"><h2>Tap iuran</h2><p class="mu">Tempelkan tag anggota ke belakang HP bendahara.</p>'
+   +'<button class="tapbtn'+(scanning?' live':'')+'" data-act="scan">'+(scanning?'Siap dibaca<br>(ketuk untuk stop)':'Mulai scan NFC')+'</button>'
+   +(hasNFC?'':'<p class="mu">Browser ini belum mendukung Web NFC. Gunakan pilih manual di bawah.</p>')+'</div>';
+  h+='<div class="card"><h2>Pilih manual</h2><div class="row"><select id="pick"><option value="">Pilih anggota</option>'
+   +S.members.map(x=>'<option value="'+x.id+'"'+(x.id===cur?' selected':'')+'>'+esc(x.name)+'</option>').join('')
+   +'</select><button class="sec" data-act="pick">Pilih</button></div></div>';
+  if(m){
+    h+='<div class="card"><h2>'+esc(m.name)+'</h2><span class="code">'+esc(m.code)+'</span> ';
+    if(p)h+='<span class="tag ok">Lunas '+bulan(per())+'</span><p class="mu">Dibayar '+fmt(p.ts)+' lewat '+esc(p.method)+'. Tap lagi tidak akan mencatat ganda.</p>';
+    else{
+      h+='<span class="tag bad">Belum bayar</span><label>Nominal</label><input id="amt" type="number" inputmode="numeric" value="'+S.nominal+'">'
+       +'<label>Metode</label><select id="met"><option>QRIS</option><option>Transfer</option><option>Tunai</option></select>'
+       +'<div class="row"><button data-act="pay">Catat bayar</button></div>';
+    }
+    h+='</div>';
+  }
+  const lg=S.log.slice(0,5);
+  if(lg.length)h+='<div class="card"><h2>Tap terakhir</h2>'+lg.map(l=>'<div class="mem"><span>'+(l.name?esc(l.name):'<span class="mu">Tidak dikenal</span> '+esc(l.code))+'</span><span class="mu">'+fmt(l.ts)+'</span></div>').join('')+'</div>';
+  $('#s-tap').innerHTML=h;
+}
+function rMem(){
+  let h='<div class="card"><h2>Tambah anggota</h2><div class="row"><input id="nm" placeholder="Nama anggota" maxlength="40"><button data-act="add">Tambah</button></div>'
+   +'<p class="mu">Setiap anggota mendapat kode unik. Tulis kode itu ke tag NFC miliknya.</p></div>';
+  h+='<div class="card"><h2>Daftar anggota ('+S.members.length+')</h2>';
+  if(!S.members.length)h+='<p class="mu">Belum ada anggota. Tambahkan nama di atas, atau isi data contoh di tab Atur.</p>';
+  h+=S.members.map(m=>'<div class="mem"><div><b>'+esc(m.name)+'</b><span class="code">'+esc(m.code)+'</span></div><div class="acts"><button class="sec" data-act="write" data-id="'+m.id+'">Tulis ke tag</button><button class="del" data-act="rm" data-id="'+m.id+'">Hapus</button></div></div>').join('')+'</div>';
+  $('#s-mem').innerHTML=h;
+}
+function rRek(){
+  const pr=per(),tot=S.members.length,lun=S.members.filter(m=>paid(m)).length;
+  const sum=S.pays.filter(x=>x.period===pr).reduce((a,x)=>a+x.amount,0);
+  const all=S.pays.reduce((a,x)=>a+x.amount,0);
+  let h='<div class="grid"><div class="card"><div class="mu">Terkumpul bulan ini</div><div class="big">'+rp(sum)+'</div></div>'
+   +'<div class="card"><div class="mu">Anggota lunas</div><div class="big">'+lun+'/'+tot+'</div></div></div>';
+  h+='<div class="card"><h2>Status iuran</h2><table><tr><th>Nama</th><th>Status</th><th class="n">Skor</th></tr>'
+   +S.members.map(m=>{const s=score(m);return '<tr><td>'+esc(m.name)+'</td><td>'+(paid(m)?'<span class="tag ok">Lunas</span>':'<span class="tag '+(new Date().getDate()>S.due?'bad':'wr')+'">Belum</span>')+'</td><td class="n">'+s+'%</td></tr>'}).join('')+'</table>'
+   +'<p class="mu">Skor disiplin: persen bulan yang dibayar tepat waktu sejak anggota bergabung. Total kas semua periode '+rp(all)+'.</p>'
+   +'<div class="row"><button class="sec" data-act="csv">Ekspor CSV</button></div></div>';
+  $('#s-rek').innerHTML=h;
+}
+function rSet(){
+  $('#s-set').innerHTML='<div class="card"><h2>Pengaturan</h2><label>Nama organisasi</label><input id="o-org" value="'+esc(S.org)+'" maxlength="40">'
+   +'<label>Iuran per bulan (Rp)</label><input id="o-nom" type="number" inputmode="numeric" value="'+S.nominal+'">'
+   +'<label>Jatuh tempo (tanggal)</label><input id="o-due" type="number" min="1" max="28" value="'+S.due+'">'
+   +'<div class="row"><button data-act="saveset">Simpan</button></div></div>'
+   +'<div class="card"><h2>Data</h2><div class="row"><button class="sec" data-act="seed">Isi data contoh</button><button class="del" data-act="reset">Hapus semua data</button></div>'
+   +'<p class="mu">Data tersimpan di browser HP ini saja (localStorage). Ekspor CSV di tab Rekap untuk cadangan.</p></div>';
+}
+
+/* Actions */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-tab],[data-act]');if(!t)return;
+  if(t.dataset.tab){
+    document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b===t));
+    document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id==='s-'+t.dataset.tab));
+    return;
+  }
+  const a=t.dataset.act,id=t.dataset.id;
+  if(a==='scan')scanning?stopScan():startScan();
+  else if(a==='pick'){const v=$('#pick').value;if(v){cur=v;render()}}
+  else if(a==='pay'){
+    const m=S.members.find(x=>x.id===cur);if(!m||paid(m))return;
+    const amt=parseInt($('#amt').value,10);
+    if(!(amt>0)){toast('Isi nominal yang benar.');return}
+    const now=new Date();
+    S.pays.push({mid:m.id,period:per(),amount:amt,method:$('#met').value,ts:now.getTime(),ok:now.getDate()<=S.due});
+    save();toast('Tercatat: '+m.name+' '+rp(amt));render();
+  }
+  else if(a==='add'){
+    const n=$('#nm').value.trim();if(!n){toast('Isi nama anggota.');return}
+    S.members.push({id:'m'+Date.now().toString(36),name:n,code:uid(),joined:per()});save();render();toast('Anggota ditambahkan.');
+  }
+  else if(a==='write'){const m=S.members.find(x=>x.id===id);if(m)writeTag(m.code)}
+  else if(a==='rm'){
+    const m=S.members.find(x=>x.id===id);
+    if(m&&confirm('Hapus '+m.name+' beserta riwayat bayarnya?')){S.members=S.members.filter(x=>x.id!==id);S.pays=S.pays.filter(x=>x.mid!==id);if(cur===id)cur=null;save();render()}
+  }
+  else if(a==='csv'){
+    const rows=[['waktu','periode','nama','kode','nominal','metode','tepat_waktu']];
+    S.pays.forEach(p=>{const m=S.members.find(x=>x.id===p.mid)||{name:'?',code:'?'};rows.push([new Date(p.ts).toISOString(),p.period,m.name,m.code,p.amount,p.method,p.ok?'ya':'tidak'])});
+    const csv=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+    const l=document.createElement('a');l.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));l.download='tapkas-'+per()+'.csv';l.click();
+  }
+  else if(a==='saveset'){
+    S.org=$('#o-org').value.trim()||'Kas Organisasi';
+    S.nominal=Math.max(1,parseInt($('#o-nom').value,10)||10000);
+    S.due=Math.min(28,Math.max(1,parseInt($('#o-due').value,10)||10));
+    save();render();toast('Pengaturan disimpan.');
+  }
+  else if(a==='seed'){
+    ['Andi','Bella','Citra','Dimas','Eka'].forEach(n=>S.members.push({id:'m'+Math.random().toString(36).slice(2,8),name:n,code:uid(),joined:per()}));
+    [0,2].forEach(i=>{const m=S.members[i];if(m&&!paid(m)){const d=new Date();S.pays.push({mid:m.id,period:per(),amount:S.nominal,method:'QRIS',ts:d.getTime(),ok:d.getDate()<=S.due})}});
+    save();render();toast('Data contoh ditambahkan.');
+  }
+  else if(a==='reset'){if(confirm('Hapus semua data TapKas di HP ini?')){S={org:'Kas Organisasi',nominal:10000,due:10,members:[],pays:[],log:[]};cur=null;save();render()}}
+});
+document.querySelector('[data-tab="tap"]').click();
+render();
+</script>
+</body>
+</html>
